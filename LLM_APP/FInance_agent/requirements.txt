@@ -1,0 +1,7 @@
+agno>=2.2.10
+duckduckgo-search
+yfinance
+groq
+ddgs
+fastapi
+uvicorn
