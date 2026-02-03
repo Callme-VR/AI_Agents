@@ -78,8 +78,7 @@ if st.button("Match Resume with Job Description"):
                 )
             data=response.json()
             output=data.get("response","No response From model.")
-                # show the Result 
-
+            # show the Result 
             st.subheader("Match Analysis")
             st.markdown(output)
 
