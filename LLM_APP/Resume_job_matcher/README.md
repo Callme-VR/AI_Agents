@@ -10,10 +10,10 @@ A great tool for job seekers to optimize resumes for each application.
 🛠️ Tech Stack
 Python
 Streamlit – for UI
-Ollama + LLM (e.g., gemma3:4b) – for analysis
+Ollama + LLM (e.g., kimi-k2.5:cloud) – for analysis
 PyMuPDF – for PDF parsing
 ⚡ Setup Instructions
 Install dependencies:
 pip install -r requirements.txt
-Install Ollama and run a model (e.g. gemma3): ollama run gemma3:4b
-Start the app: streamlit run app.py
+Install Ollama and run a model (e.g. kimi-k2.5:cloud): ollama run kimi-k2.5:cloud
+Start the app: streamlit run main.py

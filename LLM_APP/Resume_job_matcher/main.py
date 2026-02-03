@@ -74,7 +74,7 @@ if st.button("Match Resume with Job Description"):
             with st.spinner("⏳ Analyzing The Resume vs Job Desciptions.. "):
                response = requests.post(
                     "http://localhost:11434/api/generate",
-                    json={"model": "gemma3:4b", "prompt": Prompt, "stream": False},
+                    json={"model": "kimi-k2.5:cloud", "prompt": Prompt, "stream": False},
                 )
             data=response.json()
             output=data.get("response","No response From model.")
