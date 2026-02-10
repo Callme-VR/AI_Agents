@@ -1,0 +1,7 @@
+streamlit
+agno
+Pillow
+duckduckgo-search
+google-generativeai
+google-genai
+ddgs
