@@ -1,7 +1,6 @@
 import os
-from typing import Literal
+from typing import Literal, List
 
-from plotly.graph_objs import layout
 from agency_swarm import Agent, Agency, BaseTool, ModelSettings
 from pydantic import Field
 import streamlit as st
@@ -66,7 +65,7 @@ class AnalyzeProjectRequirements(BaseTool):
 class CreateTechnicalSpecification(BaseTool):
     """Create Technical Specification"""
     
-    artectecture_type=Literal[
+    architecture_type: Literal[
          "Monolithic",
          "Microservices",
          "Serverless",
@@ -96,14 +95,14 @@ class CreateTechnicalSpecification(BaseTool):
         if project_analysis is None:
             raise ValueError("Project analysis is not stored in state")
        
-        specification={
-            project_name:project_analysis["name"],
-            architecture_type:self.artectecture_type,
-            technologies:self.core_technologies.spli(","),
-            scalability_features:self.scalability_features,
-       }
+        specification = {
+            "project_name": project_analysis["name"],
+            "architecture_type": self.architecture_type,
+            "technologies": self.core_technologies,
+            "scalability_features": self.scalability_features,
+        }
         self.context.set("specification", specification)
-        return "Technical specification created successfully{project_analysis['name']}"
+        return f"Technical specification created successfully for {project_analysis['name']}"
    
    
    
@@ -116,7 +115,7 @@ def init_session_state()->None:
         
         
 def main()->None:
-     st.page_config(page_title="AI Service Agent", layout="wide", page_icon=":robot_face:")
+     st.set_page_config(page_title="AI Service Agent", layout="wide", page_icon=":robot_face:")
      init_session_state()
      
      # api configuration
@@ -124,7 +123,7 @@ def main()->None:
      with st.sidebar:
           st.header("API Service Agent")
           st.subheader("API Configuration")
-          api_key=st.text_input("API Key", type="password", value=st.session_state.api_key, on_change=init_session_state)
+          api_key=st.text_input("API Key", type="password", value=st.session_state.api_key)
           
           if api_key:
                st.session_state.api_key=api_key
@@ -155,7 +154,110 @@ def main()->None:
                priority=st.selectbox("Priority", ["High", "Medium", "Low"])
                
           tech_requirements=st.text_area("Technical Requirements", help="Enter any specific technical requirements")
-               
           
-     
-     
+          special_considerations=st.text_area("Special Considerations", help="Enter any special considerations")
+          
+          submit_button=st.form_submit_button("Analyze Project")
+          
+          if submit_button and project_name and project_description:
+               try:
+                    ceo = Agent(
+                        name="Project Director",
+                        description="You are a CEO of multiple companies in the past and have a lot of experience in evaluating projects and making strategic decisions.",
+                        instructions="""You are an experienced CEO who evaluates projects. Follow these steps strictly:
+
+1. FIRST, use the AnalyzeProjectRequirements tool with:
+   - project_name: The name from the project details
+   - project_description: The full project description
+   - project_type: The type of project (Web Application, Mobile App, etc)
+   - project_budget: The specified budget range
+
+2. WAIT for the analysis to complete before proceeding.
+
+3. Review the analysis results and provide strategic recommendations.
+""",
+                        tools=[AnalyzeProjectRequirements],
+                        model_settings=ModelSettings(temperature=0.7, max_tokens=2500),
+                    )
+                    
+                    cto = Agent(
+                        name="Technical Architect",
+                        description="Senior technical architect with experience in designing scalable and secure systems.",
+                        instructions="""You are a technical architect. Follow these steps strictly:
+
+1. WAIT for the project analysis to be completed by the CEO.
+
+2. Use the CreateTechnicalSpecification tool with:
+   - architecture_type: Choose from Monolithic/Microservices/Serverless/Event-driven/Other
+   - core_technologies: List main technologies
+   - scalability_features: Choose High/Medium/Low based on project needs
+
+3. Review the technical specification and provide additional recommendations.
+""",
+                        tools=[CreateTechnicalSpecification],
+                        model_settings=ModelSettings(temperature=0.7, max_tokens=2500),
+                    )
+                    
+                    product_manager = Agent(
+                         name="Product Manager",
+                         description="Experienced product manager with a track record of delivering successful products.",
+                         instructions="""You are a product manager. Follow these steps strictly:
+
+- Manage project scope and timeline giving the roadmap of the project
+- Define product requirements and you should give potential products and features that can be built for the startup
+""",
+                         model_settings=ModelSettings(temperature=0.7, max_tokens=2500),
+                    )
+                    
+                    developer = Agent(
+                         name="Lead Developer",
+                         description="Senior developer with full stack expertise.",
+                         instructions="""You are a lead developer. Follow these steps strictly:
+
+- Plan technical implementation
+- Provide effort estimates
+- Review technical feasibility
+""",
+                         model_settings=ModelSettings(temperature=0.3, max_tokens=2500),
+                    )
+                    
+                    client_manager = Agent(
+                         name="Client Success Manager",
+                         description="Experienced client manager focused on project delivery.",
+                         instructions="""You are a client success manager. Follow these steps strictly:
+
+- Ensure client satisfaction
+- Manage expectations
+- Handle feedback
+""",
+                         model_settings=ModelSettings(temperature=0.3, max_tokens=2500),
+                    )
+                    
+                    agency = Agency(
+                         agents=[
+                              ceo,
+                              cto,
+                              product_manager,
+                              developer,
+                              client_manager,
+                         ],
+                         communication_flows=[
+                              (ceo, cto),
+                              (ceo, product_manager),
+                              (ceo, developer),
+                              (ceo, client_manager),
+                              (cto, developer),
+                              (product_manager, developer),
+                              (product_manager, client_manager),
+                         ],
+                    )
+                    
+                    # prepare project informations
+                    
+                    project_info={
+                         "name":project_name,
+                    }
+                    
+                    
+               except Exception as e:
+                    st.error(f"Error creating agents: {str(e)}")
