@@ -136,8 +136,11 @@ def main()->None:
      st.set_page_config(page_title="AI Service Agent", layout="wide", page_icon=":robot_face:")
      init_session_state()
      
-     # api configuration
      
+     
+     
+     
+     # api configuration
      with st.sidebar:
           st.header("🚀API Service Agent")
           st.subheader("API Configuration")
@@ -152,11 +155,17 @@ def main()->None:
                st.markdown("[Get your API key here](https://platform.openai.com/api-keys)")
                return
           
+          
+          
+          
      # agent configuration using swarn v1
      os.environ["OPENAI_API_KEY"] = st.session_state.api_key
      
-     # with project input Form
      
+     
+     
+     
+     # with project input Form
      with st.form(key="project_form"):
           st.subheader("Project Input")
           project_name=st.text_input("Project Name")
