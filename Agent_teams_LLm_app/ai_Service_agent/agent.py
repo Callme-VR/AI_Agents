@@ -142,5 +142,20 @@ def main()->None:
      
      with st.form(key="project_form"):
           st.subheader("Project Input")
+          project_name=st.text_input("Project Name")
+          project_description=st.text_area("project",help="Describe the Project,its goal,any specific environment,any specific features")
+          
+          col1,col2=st.columns(2)
+          with col1:
+               project_type=st.selectbox("Project Type", ["Web Application", "Mobile Application", "Desktop Application", "API Development", "Data Analytics", "AI/ML Solution", "Other"])
+               timeline=st.selectbox("Timeline", ["1 month", "2 months", "3 months", "4 months", "5 months", "6 months"])
+          with col2:
+               project_budget=st.selectbox("Project Budget", ["$10k-50k", "$50k-100k", "$100k-200k", "$200k-500k", "$500k-1M", "$1M+"])
+               
+               priority=st.selectbox("Priority", ["High", "Medium", "Low"])
+               
+          tech_requirements=st.text_area("Technical Requirements", help="Enter any specific technical requirements")
+               
+          
      
      
