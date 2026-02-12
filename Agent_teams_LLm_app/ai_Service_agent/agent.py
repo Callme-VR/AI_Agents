@@ -139,7 +139,7 @@ def main()->None:
      # api configuration
      
      with st.sidebar:
-          st.header("API Service Agent")
+          st.header("🚀API Service Agent")
           st.subheader("API Configuration")
           api_key=st.text_input("API Key", type="password", value=st.session_state.api_key)
           
