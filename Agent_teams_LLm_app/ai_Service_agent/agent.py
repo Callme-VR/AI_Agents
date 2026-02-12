@@ -256,8 +256,47 @@ def main()->None:
                     
                     project_info={
                          "name":project_name,
+                         "description":project_description,
+                         "type":project_type,
+                         "timeline":timeline,
+                         "budget":project_budget,
+                         "priority":priority,
+                         "tech_requirements":tech_requirements,
+                         "special_considerations":special_considerations
                     }
                     
                     
+                    st.session_state.message.append(
+                         {"role":"system","content":str(project_info)}
+                    )
+                    
+                    # create tab and run analysis
+                    
+                    with st.spinner("Analyzing project..."):
+                         try:
+                              # get analysis from each agent get_response
+                              ceo_response=str(
+                                   agency.get_response_sync(
+                                        message=f"""
+                                        project Name:{project_name}
+                                        project description:{project_description}
+                                        project type:{project_type}
+                                        budget:{project_budget}
+                                        
+                                        use these exact details and valuw with the Tools for analysis results.
+                                        """
+                                   ).final_output
+                                   
+                              )
+                              
+                         except Exception as e:
+                              st.error(f"Error getting analysis: {str(e)}")
+                              
+                              
+                         
+                    
                except Exception as e:
                     st.error(f"Error creating agents: {str(e)}")
+                    
+                    
+                    
