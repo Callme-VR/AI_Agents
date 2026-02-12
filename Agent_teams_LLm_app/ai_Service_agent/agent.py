@@ -1,5 +1,5 @@
 import os
-from typing import Literal, List
+from typing import Literal, List, Optional
 
 from agency_swarm import Agent, Agency, BaseTool, ModelSettings
 from pydantic import Field
@@ -32,6 +32,14 @@ class AnalyzeProjectRequirements(BaseTool):
         "$1M+"
     ] = Field(..., description="Budget of the Project")
 
+    timeline: Optional[str] = Field(default=None, description="Project Timeline")
+
+    priority: Optional[str] = Field(default=None, description="Project Priority")
+
+    tech_requirements: Optional[str] = Field(default=None, description="Technical Requirements")
+
+    special_considerations: Optional[str] = Field(default=None, description="Special Considerations")
+
     class ToolConfig:
         name = "Analyze Project Requirements"
         description = "Analyze Project Requirements and Feasibility"
@@ -40,15 +48,22 @@ class AnalyzeProjectRequirements(BaseTool):
     def run(self) -> str:
         """Analyzing Project Requirements"""
 
+        if not hasattr(self, 'context') or self.context is None:
+            raise RuntimeError("Tool context not initialized")
+
         if self.context.get("project_analysis", None) is not None:
             raise ValueError("Project analysis is already stored in state")
 
         analysis = {
             "name": self.project_name,
+            "description": self.project_description,
             "type": self.project_type,
             "complexity": "high",
-            "timeline": "3 months",
+            "timeline": self.timeline or "3 months",
             "budget_feasibility": "within range",
+            "priority": self.priority,
+            "tech_requirements": self.tech_requirements,
+            "special_considerations": self.special_considerations,
             "requirements": [
                 "Scalable architecture",
                 "Security",
@@ -88,7 +103,10 @@ class CreateTechnicalSpecification(BaseTool):
         
     def run(self) -> str:
         """Creating Technical Specification"""
-        
+
+        if not hasattr(self, 'context') or self.context is None:
+            raise RuntimeError("Tool context not initialized")
+
         project_analysis=self.context.get("project_analysis", None)
         
         
@@ -282,21 +300,103 @@ def main()->None:
                                         project description:{project_description}
                                         project type:{project_type}
                                         budget:{project_budget}
-                                        
-                                        use these exact details and valuw with the Tools for analysis results.
+                                        timeline:{timeline}
+                                        priority:{priority}
+                                        tech_requirements:{tech_requirements}
+                                        special_considerations:{special_considerations}
+
+                                        use these exact details and values with the Tools for analysis results.
                                         """
                                    ).final_output
-                                   
+
+                              )
+
+
+                              cto_response=str(
+                                   agency.get_response_sync(
+                                        message=f"""Review the project analysis and create technical specifications using the CreateTechnicalSpecification tool.
+                                        Choose the most appropriate:
+                                        - architecture_type (monolithic/microservices/serverless/event-driven/other)
+                                        - core_technologies (comma-separated list)
+                                        - scalability_features (high/medium/low)
+
+                                        Base your choices on the project requirements and analysis.""",
+                                        recipient_agent=cto
+                                   ).final_output
+                              )
+                              pm_response=str(
+                                   agency.get_response_sync(
+                                        message=f"Create a product roadmap and define product requirements based on: {str(project_info)}",
+                                        recipient_agent=product_manager,
+                                        additional_instruction="Focus on product-market fit, roadmap planning, and coordination with technical and marketing teams"
+                                   ).final_output
                               )
                               
+                              developer_response=str(
+                                   agency.get_response_sync(
+                                        message=f"Plan technical implementation and provide effort estimates for: {str(project_info)}",
+                                        recipient_agent=developer,
+                                        additional_instruction="Focus on technical feasibility, implementation plan, effort estimates, and technology choices"
+                                   ).final_output
+                              )
+                              
+                              client_response=str(
+                                   agency.get_response_sync(
+                                        message=f"Develop a client success strategy for: {str(project_info)}",
+                                        recipient_agent=client_manager,
+                                        additional_instruction="Focus on client satisfaction, expectation management, and feedback handling throughout the project lifecycle"
+                                   ).final_output
+                              )
+                              
+                              # creating tabs for diffrent analysis
+                              
+                              tabs=st.tabs(["CEO Analysis","CTO Analysis","Product Manager Analysis","Developer Analysis","Client Manager Analysis"])
+                              
+                              
+                              with tabs[0]:
+                                   st.markdown("## CEO Strategic Analysis")
+                                   st.markdown(ceo_response)
+                                   st.session_state.message.append({"role":"assistant","content":ceo_response})
+                              with tabs[1]:
+                                   st.markdown("## CTO Technical Specifications")
+                                   st.markdown(cto_response)
+                                   st.session_state.message.append({"role": "assistant", "content": cto_response})
+                              with tabs[2]:
+                                   st.markdown("## Product Manager's Plan")
+                                   st.markdown(pm_response)
+                                   st.session_state.message.append({"role": "assistant", "content": pm_response})
+                        
+                              with tabs[3]:
+                                   st.markdown("## Lead Developer's Development Plan")
+                                   st.markdown(developer_response)
+                                   st.session_state.message.append({"role": "assistant", "content": developer_response})
+                        
+                              with tabs[4]:
+                                   st.markdown("## Client Success Strategy")
+                                   st.markdown(client_response)
+                                   st.session_state.message.append({"role": "assistant", "content": client_response})
+                                   
                          except Exception as e:
                               st.error(f"Error getting analysis: {str(e)}")
-                              
-                              
-                         
-                    
+                              st.error("Please check your inputs and API key and try again.")
+
                except Exception as e:
                     st.error(f"Error creating agents: {str(e)}")
-                    
-                    
-                    
+                    st.error("Please check your API key and try again.")          
+               
+               
+               
+     with st.sidebar:
+          st.subheader("Options")
+          if st.checkbox("Run Analysis"):
+               for message in st.session_state.message:
+                    with st.chat_message(message["role"]):
+                         st.write(message["content"])
+                         
+          if st.button("Clear"):
+               st.session_state.message=[]
+               st.session_state.agency=None
+               st.rerun()
+
+if __name__ == "__main__":
+    main()
