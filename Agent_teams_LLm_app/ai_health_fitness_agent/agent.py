@@ -12,35 +12,6 @@ st.set_page_config(
      initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-    <style>
-    .main {
-        padding: 2rem;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-    }
-    .success-box {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        background-color: #f0fff4;
-        border: 1px solid #9ae6b4;
-    }
-    .warning-box {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        background-color: #fffaf0;
-        border: 1px solid #fbd38d;
-    }
-    div[data-testid="stExpander"] div[role="button"] p {
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 
 def display_diet_plan(plane_context):
     with st.expander("Diet Plan", expanded=True):
@@ -86,12 +57,6 @@ def main():
         st.session_state.plan_generated = False
         
     st.title("AI Health & Fitness Agent")
-    st.markdown("""
-                <div style="background-color:#f0fff4;padding:1rem;border-radius:0.5rem;">
-                    <h2>Welcome to your AI Health & Fitness Agent!</h2>
-                    <p>This agent will help you create a personalized diet and workout plan based on your goals and preferences.</p>
-                </div>
-                """, unsafe_allow_html=True)
     
     with st.sidebar:
         st.header("api configurations")
@@ -106,7 +71,7 @@ def main():
         
     if gemini_api_key:
         try:
-            Gemini_model = Gemini(id="gemini-2.0-flash-exp", api_key=gemini_api_key)
+            Gemini_model = Gemini(id="gemini-2.5-flash", api_key=gemini_api_key)
         except Exception as e:
             st.error(f"Error initializing Gemini model: {e}")
             return
@@ -119,7 +84,7 @@ def main():
         with col1:
             age = st.number_input("Age", min_value=18, max_value=100, step=1, help="Enter your age")
             
-            height = st.number_input("Height (cm)", min_value=100, max_value=250.0, step=0.1, help="Enter your height in cm")
+            height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, step=0.1, help="Enter your height in cm")
             
             activity_level = st.selectbox(
                 "Activity Level",
