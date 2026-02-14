@@ -82,7 +82,7 @@ def main():
     if "dietry_plan" not in st.session_state:
         st.session_state.dietry_plan = {}
         st.session_state.fitness_plan = {}
-        st.session_state.qa_pairs = {}
+        st.session_state.qa_pairs = []
         st.session_state.plan_generated = False
         
     st.title("AI Health & Fitness Agent")
@@ -137,43 +137,118 @@ def main():
                                  "Other"], 
                                 help="Choose your typical dietry preference")
         with col2:
-             weight = st.number_input("Weight (kg)", min_value=30.0, max_value=300.0, step=0.1, help="Enter your weight in kg")
-             sex = st.selectbox("Sex", ["Male", "Female", "Other"], help="Choose your sex")
-             
-             fitness_goal = st.selectbox("Fitness Goal", 
-                                        ["Weight Loss", "Muscle Gain", "Maintenance", "Endurance", "Strength"], 
-                                        help="Choose your primary fitness goal")
+            weight = st.number_input("Weight (kg)", min_value=30.0, max_value=300.0, step=0.1, help="Enter your weight in kg")
+            sex = st.selectbox("Sex", ["Male", "Female", "Other"], help="Choose your sex")
+            
+            fitness_goal = st.selectbox("Fitness Goal", 
+                                       ["Weight Loss", "Muscle Gain", "Maintenance", "Endurance", "Strength"], 
+                                       help="Choose your primary fitness goal")
         if st.button("Generate Plan"):
             with st.spinner("Generating your personalized plan..."):
                 try:
-                     dietry_plan=Agent(
-                          name="Dietry Plan Agent",
-                          model= Gemini_model,
-                           instructions=[
+                    dietry_plan = Agent(
+                        name="Dietry Plan Agent",
+                        model=Gemini_model,
+                        instructions=[
                             "Consider the user's input, including dietary restrictions and preferences.",
                             "Suggest a detailed meal plan for the day, including breakfast, lunch, dinner, and snacks.",
                             "Provide a brief explanation of why the plan is suited to the user's goals.",
                             "Focus on clarity, coherence, and quality of the recommendations.",
                         ]
-                           
-                     )
-                     
-                     fitness_agent=Agent(
-                          name="Fitness Plan Agent",
-                          model= Gemini_model,
-                          instructions=[
+                    )
+                    
+                    fitness_agent = Agent(
+                        name="Fitness Plan Agent",
+                        model=Gemini_model,
+                        instructions=[
                             "Provide exercises tailored to the user's goals.",
                             "Include warm-up, main workout, and cool-down exercises.",
                             "Explain the benefits of each recommended exercise.",
                             "Ensure the plan is actionable and detailed.",
                         ]
-                     )
-                     
-                     
-                     
-                     
-                     
-                     
+                    )
+                    
+                    user_profile = f"""
+                    Age: {age}
+                    Weight: {weight}
+                    Height: {height}
+                    Activity Level: {activity_level}
+                    Dietry Preferences: {dietry_preferences}
+                    Gender: {sex}
+                    Fitness Goal: {fitness_goal}
+                    """
+
+                    
+                    dietry_plan_response = dietry_plan.run(user_profile)
+                    
+                    dietary_plan = {
+                        "why_this_plan_works": "High Protein, Healthy Fats, Moderate Carbohydrates, and Caloric Balance",
+                        "meal_plan": dietry_plan_response.content,
+                        "important_considerations": """
+                        - Hydration: Drink plenty of water throughout the day
+                        - Electrolytes: Monitor sodium, potassium, and magnesium levels
+                        - Fiber: Ensure adequate intake through vegetables and fruits
+                        - Listen to your body: Adjust portion sizes as needed
+                        """
+                    }
+                    
+                    
+                    fitness_plan_response = fitness_agent.run(user_profile)
+                    fitness_plan = {
+                        "goals": "Build strength, improve endurance, and maintain overall fitness",
+                        "exercise_routine": fitness_plan_response.content,
+                        "important_considerations": """
+                        - Track your progress regularly
+                        - Allow proper rest between workouts
+                        - Focus on proper form
+                        - Stay consistent with your routine
+                        """
+                    }
+                    
+                    st.session_state.dietary_plan = dietary_plan
+                    st.session_state.fitness_plan = fitness_plan
+                    st.session_state.plan_generated = True
+                    
+                    display_diet_plan(dietary_plan)
+                    display_fitness_plan(fitness_plan)
+                    
                 except Exception as e:
-                     st.error(f"Error generating plan: {e}")
-                     return
+                    st.error(f"Error generating plan: {e}")
+                    return
+               
+        if st.session_state.plan_generated:
+            st.header("Your Personalized Health & Fitness Plan")
+            question_input = st.text_input("Ask me anything about your plan:")
+               
+        if st.button("Ask Question"):
+            if question_input:
+                with st.spinner("Thinking..."):
+                    dietry_plan = st.session_state.dietary_plan
+                    fitness_plan = st.session_state.fitness_plan
+                    
+                    
+                    context = f"Dietary Plan: {dietry_plan.get('meal_plan', '')}\n\nFitness Plan: {fitness_plan.get('exercise_routine', '')}"
+                    full_context = f"{context}\nUser Question: {question_input}"
+                    try:
+                        agent = Agent(model=Gemini_model, debug_mode=True, markdown=True)
+                        Run_response = agent.run(full_context)
+                        
+                        if hasattr(Run_response, 'content'):
+                            answer = Run_response.content
+                            
+                        else:
+                            answer = "Sorry, I couldn't generate an answer."
+                            
+                        st.session_state.qa_pairs.append({"question": question_input, "answer": answer})
+                    except Exception as e:
+                        st.error(f"Error generating answer: {e}")
+        if st.session_state.qa_pairs:
+            st.header("Q&A History")
+            for i, qa in enumerate(st.session_state.qa_pairs):
+                st.subheader(f"Question {i+1}")
+                st.write(f"**Q:** {qa['question']}")
+                st.write(f"**A:** {qa['answer']}")
+                    
+                    
+if __name__ == "__main__":
+    main()
