@@ -15,7 +15,6 @@ model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
 messages = []
 
 while True:
-
     prompt = input("You: ")
 
     if prompt.lower() in ["exit", "quit"]:
