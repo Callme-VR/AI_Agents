@@ -1,0 +1,12 @@
+openai
+google-generativeai
+mistralai
+
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+langchain-mistralai
+
+python-dotenv
+streamlit
