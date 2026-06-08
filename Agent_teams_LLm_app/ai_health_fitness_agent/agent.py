@@ -13,6 +13,7 @@ st.set_page_config(
 )
 
 
+
 def display_diet_plan(plane_context):
     with st.expander("Diet Plan", expanded=True):
         col1, col2 = st.columns([2, 1])
@@ -71,7 +72,7 @@ def main():
         
     if gemini_api_key:
         try:
-            Gemini_model = Gemini(id="gemini-2.5-flash", api_key=gemini_api_key)
+            Gemini_model = Gemini(id="gemini-3.5-flash", api_key=gemini_api_key)
         except Exception as e:
             st.error(f"Error initializing Gemini model: {e}")
             return
