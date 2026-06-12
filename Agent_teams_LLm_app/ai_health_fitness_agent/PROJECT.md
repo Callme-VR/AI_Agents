@@ -1,9 +1,7 @@
 # 🤖 AI Health & Fitness Agent — Project Documentation
-
 > A complete walkthrough of `agent.py`: what each part does, how the code flows, and how the AI agents work under the hood.
 
 ---
-
 ## 📌 1. Project Overview
 
 **What is this project?**
